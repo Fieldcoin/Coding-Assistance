@@ -420,7 +420,7 @@
       },
       {
         "attributes": {
-          "SourceUnit": 1131,
+          "SourceUnit": 1260,
           "absolutePath": "zeppelin-solidity/contracts/token/ERC20/StandardToken.sol",
           "file": "zeppelin-solidity/contracts/token/ERC20/StandardToken.sol",
           "scope": 47,
@@ -436,20 +436,20 @@
       {
         "attributes": {
           "contractDependencies": [
-            809,
-            852,
-            884,
-            1130
+            938,
+            981,
+            1013,
+            1259
           ],
           "contractKind": "contract",
           "documentation": null,
           "fullyImplemented": true,
           "linearizedBaseContracts": [
             46,
-            1130,
-            809,
-            852,
-            884
+            1259,
+            938,
+            981,
+            1013
           ],
           "name": "FieldToken",
           "scope": 47,
@@ -473,7 +473,7 @@
                 "attributes": {
                   "contractScope": null,
                   "name": "StandardToken",
-                  "referencedDeclaration": 1130,
+                  "referencedDeclaration": 1259,
                   "type": "contract StandardToken"
                 },
                 "id": 3,
@@ -947,7 +947,7 @@
                               "overloadedDeclarations": [
                                 null
                               ],
-                              "referencedDeclaration": 728,
+                              "referencedDeclaration": 857,
                               "type": "uint256",
                               "value": "totalSupply_"
                             },
@@ -1016,7 +1016,7 @@
                                   "overloadedDeclarations": [
                                     null
                                   ],
-                                  "referencedDeclaration": 726,
+                                  "referencedDeclaration": 855,
                                   "type": "mapping(address => uint256)",
                                   "value": "balances"
                                 },
@@ -1042,7 +1042,7 @@
                                       "overloadedDeclarations": [
                                         null
                                       ],
-                                      "referencedDeclaration": 1142,
+                                      "referencedDeclaration": 1271,
                                       "type": "msg",
                                       "value": "msg"
                                     },
@@ -1118,7 +1118,7 @@
                               "overloadedDeclarations": [
                                 null
                               ],
-                              "referencedDeclaration": 883,
+                              "referencedDeclaration": 1012,
                               "type": "function (address,address,uint256)",
                               "value": "Transfer"
                             },
@@ -1165,7 +1165,7 @@
                                   "overloadedDeclarations": [
                                     null
                                   ],
-                                  "referencedDeclaration": 1142,
+                                  "referencedDeclaration": 1271,
                                   "type": "msg",
                                   "value": "msg"
                                 },
@@ -1814,7 +1814,7 @@
     "3": {
       "events": {},
       "links": {},
-      "address": "0xb56f2994b671f8bdd69deaf1dadb7e28a2e25ce6"
+      "address": "0x51e4ecc1b1b58476917a9675ab8da55f98314418"
     },
     "1521392776559": {
       "events": {},
@@ -1825,8 +1825,13 @@
       "events": {},
       "links": {},
       "address": "0xef2d29ef6d10eb4532e6624d20af9635dd1397c5"
+    },
+    "1522449353905": {
+      "events": {},
+      "links": {},
+      "address": "0x703a75f2e8076ec4e386ec123d7042ab913b9133"
     }
   },
   "schemaVersion": "1.0.1",
-  "updatedAt": "2018-03-21T22:36:04.710Z"
+  "updatedAt": "2018-03-30T23:32:03.552Z"
 }
