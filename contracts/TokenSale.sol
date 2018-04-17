@@ -13,15 +13,25 @@ contract PreCrowdsale is FinalizableCrowdsale {
   uint public ETH_USD = 60000; //in cents
   uint public USDRaised = 0;
   uint public tokensSold = 0;
-  uint public maxTokens = 0; //change
+  uint public tokensForSale = 0; //change
+  uint public bonusTokens = 0;
 
-  function PreCrowdsale(uint256 _openingTime, uint256 _closingTime, uint _rate, uint256 _tokenCost, address _wallet, uint256 _maxTokens, ERC20 _token) public
+  struct Milestone {
+    uint time;
+    uint bonus;
+  }
+
+  Milestone[10] public milestones;
+  uint public milestoneCount;
+
+  function PreCrowdsale(uint256 _openingTime, uint256 _closingTime, uint _rate, uint256 _tokenCost, address _wallet, uint256 _tokensForSale, uint256 _bonusTokens, ERC20 _token) public
     Crowdsale(_rate, _wallet, _token)
     TimedCrowdsale(_openingTime, _closingTime) {
       require(_tokenCost > 0);
-      require(_maxTokens > 0);
+      require(_tokensForSale > 0);
       tokenCost = _tokenCost;
-      maxTokens = _maxTokens;
+      tokensForSale = _tokensForSale;
+      bonusTokens = _bonusTokens;
   }
 
   function setETH_USDRate(uint _newETH_USD) public onlyOwner {
@@ -30,17 +40,37 @@ contract PreCrowdsale is FinalizableCrowdsale {
   }
 
   function _getTokenAmount(uint256 _weiAmount) internal view returns (uint256) {
-    return _weiAmount.mul(ETH_USD).div(tokenCost);
+     return _weiAmount.mul(ETH_USD).div(tokenCost);
+  }
+
+
+  function getCurrentMilestone() private constant returns (Milestone) {
+    uint i;
+    for(i=0; i<milestones.length; i++) {
+      if(now < milestones[i].time) {
+        return milestones[i-1];
+      }
+    }
   }
 
   function _processPurchase(address _beneficiary, uint256 _tokenAmount) internal {
+
     tokensSold = tokensSold.add(_tokenAmount);
+
+    //get bonus tier
+    Milestone memory _currentMilestone = getCurrentMilestone();
+    if(_currentMilestone.bonus > 0 && bonusTokens > 0) {
+      uint _bonusTokens = _tokenAmount.mul(_currentMilestone.bonus).div(100);
+      bonusTokens = bonusTokens.sub(_bonusTokens);
+      _tokenAmount = _tokenAmount.add(_bonusTokens);
+    }
+
     super._processPurchase(_beneficiary, _tokenAmount);
   }
 
 
   function tokensRemaining() public constant returns(uint256) {
-    return maxTokens.sub(tokensSold);
+    return tokensForSale.sub(tokensSold);
   }
 
   function _preValidatePurchase(address _beneficiary, uint256 _weiAmount) internal {
