@@ -364,4 +364,64 @@ contract('Tokensale', async function(accounts) {
 
   });
 
+  describe('Token sale close', () => {
+    let ERC20;
+    let tokenSale;
+    let openingTime;
+    let closingTime;
+    let rate = 1;
+    let tokenCost = 5;
+    let wallet = accounts[2];
+    let tokensForSale = 12000
+    let bonusTokens = 58000000
+    let minContribution = ether(0.1);
+
+    var times;
+    var bonus;
+
+    beforeEach(async () => {
+      var totalSupply = 750000000
+      ERC20 = await Token.new(totalSupply);
+      var now = latestTime();
+      openingTime = now + duration.days(1);
+      closingTime = openingTime + duration.days(70);
+      tokenSale = await TokenSale.new(openingTime, closingTime, rate, tokenCost, wallet, ether(tokensForSale), ether(bonusTokens), ERC20.address, minContribution);
+      times = [
+        openingTime + duration.days(10),
+        openingTime + duration.days(10 + 15),
+        openingTime + duration.days(10 + 15 + 10),
+        openingTime + duration.days(10 + 15 + 10 + 10),
+        openingTime + duration.days(10 + 15 + 10 + 10 + 10),
+        closingTime + 1
+      ]
+
+      bonus = [
+        30,
+        26,
+        15,
+        10,
+        5,
+        0
+      ];
+      await tokenSale.initializeMilestones(times, bonus)
+      await ERC20.transfer(tokenSale.address, ether(tokensForSale));
+      await ERC20.transfer(tokenSale.address, ether(bonusTokens));
+    });
+
+    it('should not accept any contributions once the crowdsale is over', async () => {
+      await increaseTimeTo(closingTime + 10);
+      await tokenSale.sendTransaction({ value: ether(0.2) }).should.be.rejectedWith(EVMRevert);
+    })
+
+    it('should not accept any contributions once the crowdsale is over', async () => {
+      await increaseTimeTo(openingTime + 10);
+      await tokenSale.sendTransaction({ value: ether(1) });
+      let tokensSold = await tokenSale.tokensSold();
+      let _tokensForSale = await tokenSale.tokensForSale();
+      let tokensRemaining = await tokenSale.tokensRemaining()
+      await tokenSale.sendTransaction({ value: ether(1) })
+      .should.be.rejectedWith(EVMRevert);
+    })
+  })
+
 });

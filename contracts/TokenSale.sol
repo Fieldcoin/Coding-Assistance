@@ -6,6 +6,7 @@ import "zeppelin-solidity/contracts/crowdsale/distribution/FinalizableCrowdsale.
 import "zeppelin-solidity/contracts/ownership/Ownable.sol";
 import 'zeppelin-solidity/contracts/token/ERC20/BurnableToken.sol';
 import 'zeppelin-solidity/contracts/lifecycle/Pausable.sol';
+import 'zeppelin-solidity/contracts/math/Math.sol';
 
 
 contract TokenSale is FinalizableCrowdsale, Pausable  {
@@ -79,6 +80,7 @@ contract TokenSale is FinalizableCrowdsale, Pausable  {
 
     if(_currentMilestone.bonus > 0 && bonusTokens > 0) {
       uint _bonusTokens = _tokenAmount.mul(_currentMilestone.bonus).div(100);
+      _bonusTokens = Math.min256(bonusTokens, _bonusTokens);
       bonusTokens = bonusTokens.sub(_bonusTokens);
       _tokenAmount = _tokenAmount.add(_bonusTokens);
     }
@@ -102,9 +104,18 @@ contract TokenSale is FinalizableCrowdsale, Pausable  {
      minContribution = _minContribution;
   }
 
+  function changeTokenCost(uint256 _tokenCost) public onlyOwner {
+     require(_tokenCost > 0);
+     tokenCost = _tokenCost;
+  }
+
   function hasClosed() public view returns (bool) {
     uint tokensLeft = tokensRemaining();
     return tokensLeft == 0 || super.hasClosed();
+  }
+
+  function setNewWallet(address _newWallet) onlyOwner public {
+    wallet = _newWallet;
   }
 
   function finalization() internal {
