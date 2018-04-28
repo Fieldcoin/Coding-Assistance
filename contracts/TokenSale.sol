@@ -5,16 +5,19 @@ import "zeppelin-solidity/contracts/crowdsale/validation/TimedCrowdsale.sol";
 import "zeppelin-solidity/contracts/crowdsale/distribution/FinalizableCrowdsale.sol";
 import "zeppelin-solidity/contracts/ownership/Ownable.sol";
 import 'zeppelin-solidity/contracts/token/ERC20/BurnableToken.sol';
+import 'zeppelin-solidity/contracts/lifecycle/Pausable.sol';
 
 
-contract PreCrowdsale is FinalizableCrowdsale {
+contract TokenSale is FinalizableCrowdsale, Pausable  {
 
   uint public tokenCost = 5; //5 cents
   uint public ETH_USD = 60000; //in cents
-  uint public USDRaised = 0;
   uint public tokensSold = 0;
   uint public tokensForSale = 0; //change
   uint public bonusTokens = 0;
+  bool public initialized = false;
+  uint public minContribution;
+
 
   struct Milestone {
     uint time;
@@ -24,14 +27,17 @@ contract PreCrowdsale is FinalizableCrowdsale {
   Milestone[10] public milestones;
   uint public milestoneCount;
 
-  function PreCrowdsale(uint256 _openingTime, uint256 _closingTime, uint _rate, uint256 _tokenCost, address _wallet, uint256 _tokensForSale, uint256 _bonusTokens, ERC20 _token) public
-    Crowdsale(_rate, _wallet, _token)
-    TimedCrowdsale(_openingTime, _closingTime) {
+  function TokenSale(uint256 _openingTime, uint256 _closingTime, uint _rate, uint256 _tokenCost, address _wallet, uint256 _tokensForSale, uint256 _bonusTokens, ERC20 _token, uint _minContribution) public
+  Crowdsale(_rate, _wallet, _token)
+  TimedCrowdsale(_openingTime, _closingTime)
+  {
       require(_tokenCost > 0);
       require(_tokensForSale > 0);
+      require(_minContribution > 0);
       tokenCost = _tokenCost;
       tokensForSale = _tokensForSale;
       bonusTokens = _bonusTokens;
+      minContribution = _minContribution;
   }
 
   function setETH_USDRate(uint _newETH_USD) public onlyOwner {
@@ -39,26 +45,38 @@ contract PreCrowdsale is FinalizableCrowdsale {
     ETH_USD = _newETH_USD;
   }
 
+  function initializeMilestones(uint[] _time, uint[] _bonus) public onlyOwner {
+    require(!initialized);
+    require(now < openingTime);
+    require(_bonus.length > 0 && _bonus.length == _time.length);
+    for(uint i=0; i < _bonus.length; i++) {
+      milestones[i] = Milestone({ time: _time[i], bonus: _bonus[i] });
+    }
+    milestoneCount = _bonus.length;
+    initialized = true;
+  }
+
   function _getTokenAmount(uint256 _weiAmount) internal view returns (uint256) {
      return _weiAmount.mul(ETH_USD).div(tokenCost);
   }
 
-
-  function getCurrentMilestone() private constant returns (Milestone) {
+  function getCurrentMilestoneIndex() public constant returns (uint) {
     uint i;
-    for(i=0; i<milestones.length; i++) {
-      if(now < milestones[i].time) {
-        return milestones[i-1];
+    for(i=0; i < milestoneCount; i++) {
+      if(block.timestamp < milestones[i].time) {
+        return i;
       }
     }
   }
 
   function _processPurchase(address _beneficiary, uint256 _tokenAmount) internal {
+    require(tokensRemaining() >= _tokenAmount);
 
     tokensSold = tokensSold.add(_tokenAmount);
-
+    uint currentMilestoneIndex = getCurrentMilestoneIndex();
     //get bonus tier
-    Milestone memory _currentMilestone = getCurrentMilestone();
+    Milestone memory _currentMilestone = milestones[currentMilestoneIndex];
+
     if(_currentMilestone.bonus > 0 && bonusTokens > 0) {
       uint _bonusTokens = _tokenAmount.mul(_currentMilestone.bonus).div(100);
       bonusTokens = bonusTokens.sub(_bonusTokens);
@@ -73,9 +91,15 @@ contract PreCrowdsale is FinalizableCrowdsale {
     return tokensForSale.sub(tokensSold);
   }
 
-  function _preValidatePurchase(address _beneficiary, uint256 _weiAmount) internal {
-    require(tokensRemaining() > 0);
+  function _preValidatePurchase(address _beneficiary, uint256 _weiAmount) whenNotPaused internal {
+    require(initialized == true);
+    require(_weiAmount >= minContribution);
     super._preValidatePurchase(_beneficiary, _weiAmount);
+  }
+
+  function changeMinContribution(uint256 _minContribution) public onlyOwner {
+     require(_minContribution > 0);
+     minContribution = _minContribution;
   }
 
   function hasClosed() public view returns (bool) {
