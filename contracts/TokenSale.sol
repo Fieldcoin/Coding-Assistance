@@ -21,8 +21,8 @@ contract TokenSale is FinalizableCrowdsale, Pausable  {
 
 
   struct Milestone {
-    uint time;
     uint bonus;
+    uint total;
   }
 
   Milestone[10] public milestones;
@@ -46,12 +46,11 @@ contract TokenSale is FinalizableCrowdsale, Pausable  {
     ETH_USD = _newETH_USD;
   }
 
-  function initializeMilestones(uint[] _time, uint[] _bonus) public onlyOwner {
-    require(!initialized);
+  function initializeMilestones(uint[] _bonus, uint[] _total) public onlyOwner {
     require(now < openingTime);
-    require(_bonus.length > 0 && _bonus.length == _time.length);
+    require(_bonus.length > 0 && _bonus.length == _total.length);
     for(uint i=0; i < _bonus.length; i++) {
-      milestones[i] = Milestone({ time: _time[i], bonus: _bonus[i] });
+      milestones[i] = Milestone({ total: _total[i], bonus: _bonus[i] });
     }
     milestoneCount = _bonus.length;
     initialized = true;
@@ -64,7 +63,7 @@ contract TokenSale is FinalizableCrowdsale, Pausable  {
   function getCurrentMilestoneIndex() public constant returns (uint) {
     uint i;
     for(i=0; i < milestoneCount; i++) {
-      if(block.timestamp < milestones[i].time) {
+      if(tokensSold < milestones[i].total) {
         return i;
       }
     }
@@ -72,20 +71,18 @@ contract TokenSale is FinalizableCrowdsale, Pausable  {
 
   function _processPurchase(address _beneficiary, uint256 _tokenAmount) internal {
     require(tokensRemaining() >= _tokenAmount);
-
-    tokensSold = tokensSold.add(_tokenAmount);
     uint currentMilestoneIndex = getCurrentMilestoneIndex();
+    uint _bonusTokens = 0;
     //get bonus tier
     Milestone memory _currentMilestone = milestones[currentMilestoneIndex];
-
-    if(_currentMilestone.bonus > 0 && bonusTokens > 0) {
-      uint _bonusTokens = _tokenAmount.mul(_currentMilestone.bonus).div(100);
+    if(bonusTokens > 0 && _currentMilestone.bonus > 0) {
+      _bonusTokens = _tokenAmount.mul(_currentMilestone.bonus).div(100);
       _bonusTokens = Math.min256(bonusTokens, _bonusTokens);
       bonusTokens = bonusTokens.sub(_bonusTokens);
-      _tokenAmount = _tokenAmount.add(_bonusTokens);
     }
+    tokensSold = tokensSold.add(_tokenAmount);
+    super._processPurchase(_beneficiary, _tokenAmount.add(_bonusTokens));
 
-    super._processPurchase(_beneficiary, _tokenAmount);
   }
 
 

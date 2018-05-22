@@ -2,9 +2,10 @@ pragma solidity ^0.4.18;
 
 import "zeppelin-solidity/contracts/token/ERC20/StandardToken.sol";
 import "zeppelin-solidity/contracts/token/ERC20/BurnableToken.sol";
+import "zeppelin-solidity/contracts/ownership/CanReclaimToken.sol";
 
 
-contract FieldToken is StandardToken, BurnableToken {
+contract FieldToken is StandardToken, BurnableToken, CanReclaimToken {
 
   string public constant name = "FieldToken"; // solium-disable-line uppercase
   string public constant symbol = "FLC"; // solium-disable-line uppercase
