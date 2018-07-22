@@ -5,6 +5,7 @@ import "zeppelin-solidity/contracts/crowdsale/validation/TimedCrowdsale.sol";
 import "zeppelin-solidity/contracts/crowdsale/distribution/FinalizableCrowdsale.sol";
 import "zeppelin-solidity/contracts/ownership/Ownable.sol";
 import 'zeppelin-solidity/contracts/token/ERC20/BurnableToken.sol';
+import "zeppelin-solidity/contracts/ownership/CanReclaimToken.sol";
 import 'zeppelin-solidity/contracts/lifecycle/Pausable.sol';
 import 'zeppelin-solidity/contracts/math/Math.sol';
 
